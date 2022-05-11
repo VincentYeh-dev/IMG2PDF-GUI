@@ -7,6 +7,8 @@ import org.vincentyeh.IMG2PDF.pdf.concrete.appender.ExecutorPageAppender;
 import org.vincentyeh.IMG2PDF.pdf.concrete.calculation.strategy.StandardImagePageCalculationStrategy;
 import org.vincentyeh.IMG2PDF.pdf.concrete.converter.ImageHelperPDFCreatorImpl;
 import org.vincentyeh.IMG2PDF.pdf.concrete.converter.PDFBoxCreatorImpl;
+import org.vincentyeh.IMG2PDF.pdf.concrete.listener.ProgressBarCreationListener;
+import org.vincentyeh.IMG2PDF.pdf.framework.converter.PDFCreator;
 import org.vincentyeh.IMG2PDF.pdf.function.converter.ImagePDFCreator;
 import org.vincentyeh.IMG2PDF.pdf.parameter.*;
 import org.vincentyeh.IMG2PDF.task.concrete.factory.DirectoryTaskFactory;
@@ -44,6 +46,7 @@ public class MainFrame {
     private JCheckBox check_auto;
     private JComboBox<FileSorter.Sortby> combo_sortby;
     private JComboBox<FileSorter.Sequence> combo_sequence;
+    private JProgressBar progress;
 
     public MainFrame() {
         createUIComponents();
@@ -67,21 +70,49 @@ public class MainFrame {
         button_convert.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
-                try {
-                    List<Task> tasks = toTasks(files);
+                new Thread(new Runnable() {
+                    @Override
+                    public void run() {
+                        try {
+                            List<Task> tasks = toTasks(files);
+                            progress.setMaximum(tasks.size());
 
-                    ImagePDFCreator creator = new ImagePDFCreator(new PDFBoxCreatorImpl(new File("temp"), 1024 * 1024 * 100),
-                            new ImageHelperPDFCreatorImpl(new DirectionImageHelper(null)),
-                            new ExecutorPageAppender(10), true, new StandardImagePageCalculationStrategy());
+                            ImagePDFCreator creator = new ImagePDFCreator(new PDFBoxCreatorImpl(new File("temp"), 1024 * 1024 * 100),
+                                    new ImageHelperPDFCreatorImpl(new DirectionImageHelper(null)),
+                                    new ExecutorPageAppender(10), true, new StandardImagePageCalculationStrategy());
+                            creator.setCreationListener(new PDFCreator.CreationListener() {
+                                int progress_int;
 
+                                @Override
+                                public void initializing(Task task) {
+                                }
 
-                    for (Task task : tasks) {
-                        creator.start(task);
+                                @Override
+                                public void onConversionComplete() {
+                                    progress.setValue(++progress_int);
+                                }
+
+                                @Override
+                                public void onSaved(File file) {
+
+                                }
+
+                                @Override
+                                public void onFinally() {
+
+                                }
+                            });
+
+                            for (Task task : tasks) {
+                                creator.start(task);
+                            }
+
+                        } catch (TaskFactoryProcessException | MakeDirectoryException ex) {
+                            ex.printStackTrace();
+                        }
                     }
+                }).start();
 
-                } catch (TaskFactoryProcessException | MakeDirectoryException ex) {
-                    ex.printStackTrace();
-                }
             }
         });
 
@@ -139,8 +170,8 @@ public class MainFrame {
     private DocumentArgument getDocumentArgument() {
         DocumentArgument argument = new DocumentArgument();
         argument.setInformation(null);
-        String owner=String.valueOf(pwd_owner_password.getPassword());
-        String user=String.valueOf(pwd_user_password.getPassword());
+        String owner = String.valueOf(pwd_owner_password.getPassword());
+        String user = String.valueOf(pwd_user_password.getPassword());
         if (owner.isEmpty()) {
             owner = null;
         }
