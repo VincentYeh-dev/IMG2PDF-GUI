@@ -12,7 +12,8 @@ public class MainProgram {
         JFrame frame = new JFrame("AA");
         frame.setContentPane(new MainFrame().getRootPanel());
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        frame.setSize(new Dimension(550, 300));
+//        frame.setSize(new Dimension(550, 300));
+        frame.pack();
         frame.setVisible(true);
     }
 }
