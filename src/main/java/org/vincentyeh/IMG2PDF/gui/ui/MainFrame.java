@@ -41,6 +41,8 @@ public class MainFrame {
     private JTextField field_filter;
     private JComboBox<PageDirection> combo_direction;
     private JCheckBox check_auto;
+    private JComboBox<FileSorter.Sortby> combo_sortby;
+    private JComboBox<FileSorter.Sequence> combo_sequence;
 
     public MainFrame() {
         createUIComponents();
@@ -58,7 +60,7 @@ public class MainFrame {
             if (option == JFileChooser.APPROVE_OPTION) {
                 files = chooser.getSelectedFiles();
                 field_sources.setText(Arrays.stream(files)
-                        .map(file -> String.format("\"%s\"",file.getAbsolutePath())).collect(Collectors.joining(" ")));
+                        .map(file -> String.format("\"%s\"", file.getAbsolutePath())).collect(Collectors.joining(" ")));
             }
         });
         button_convert.addActionListener(new ActionListener() {
@@ -85,24 +87,33 @@ public class MainFrame {
     }
 
     private void createUIComponents() {
-        for (PageDirection direction : PageDirection.values()) {
-            combo_direction.addItem(direction);
-        }
-        for (PageAlign.VerticalAlign align : PageAlign.VerticalAlign.values()) {
-            combo_vertical.addItem(align);
-        }
-        for (PageAlign.HorizontalAlign align : PageAlign.HorizontalAlign.values()) {
-            combo_horizontal.addItem(align);
-        }
-        for (PageSize size : PageSize.values()) {
-            combo_size.addItem(size);
-        }
+        combo_sortby.setModel(new DefaultComboBoxModel<>(FileSorter.Sortby.values()));
+        combo_sequence.setModel(new DefaultComboBoxModel<>(FileSorter.Sequence.values()));
+
+        combo_direction.setModel(new DefaultComboBoxModel<>(PageDirection.values()));
+        combo_vertical.setModel(new DefaultComboBoxModel<>(PageAlign.VerticalAlign.values()));
+        combo_horizontal.setModel(new DefaultComboBoxModel<>(PageAlign.HorizontalAlign.values()));
+        combo_size.setModel(new DefaultComboBoxModel<>(PageSize.values()));
+//
+//        for (PageAlign.VerticalAlign align : PageAlign.VerticalAlign.values()) {
+//            combo_vertical.addItem(align);
+//        }
+//        for (PageAlign.HorizontalAlign align : PageAlign.HorizontalAlign.values()) {
+//            combo_horizontal.addItem(align);
+//        }
+//        for (PageSize size : PageSize.values()) {
+//            combo_size.addItem(size);
+//        }
     }
 
     private List<Task> toTasks(File[] directories) throws TaskFactoryProcessException {
+
+        FileSorter.Sortby sortby = combo_sortby.getItemAt(combo_sortby.getSelectedIndex());
+        FileSorter.Sequence sequence = combo_sequence.getItemAt(combo_sequence.getSelectedIndex());
+
         TaskFactory<File> factory = new DirectoryTaskFactory(
                 getDocumentArgument(), getPageArgument(), new GlobbingFileFilter(field_filter.getText()),
-                new FileSorter(FileSorter.Sortby.NAME, FileSorter.Sequence.INCREASE),
+                new FileSorter(sortby, sequence),
                 new FileNameFormatter(field_destination.getText()));
 
         List<Task> tasks = new LinkedList<>();
