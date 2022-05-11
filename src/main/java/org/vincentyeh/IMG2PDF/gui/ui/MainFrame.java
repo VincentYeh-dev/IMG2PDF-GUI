@@ -21,8 +21,10 @@ import javax.swing.*;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.io.File;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class MainFrame {
     private File[] files;
@@ -55,20 +57,22 @@ public class MainFrame {
             int option = chooser.showOpenDialog(null);
             if (option == JFileChooser.APPROVE_OPTION) {
                 files = chooser.getSelectedFiles();
+                field_sources.setText(Arrays.stream(files)
+                        .map(file -> String.format("\"%s\"",file.getAbsolutePath())).collect(Collectors.joining(" ")));
             }
         });
         button_convert.addActionListener(new ActionListener() {
             @Override
             public void actionPerformed(ActionEvent e) {
                 try {
-                    List<Task> tasks=toTasks(files);
+                    List<Task> tasks = toTasks(files);
 
-                    ImagePDFCreator creator=new ImagePDFCreator(new PDFBoxCreatorImpl(new File("temp"),1024*1024*100),
+                    ImagePDFCreator creator = new ImagePDFCreator(new PDFBoxCreatorImpl(new File("temp"), 1024 * 1024 * 100),
                             new ImageHelperPDFCreatorImpl(new DirectionImageHelper(null)),
-                            new ExecutorPageAppender(10),true,new StandardImagePageCalculationStrategy());
+                            new ExecutorPageAppender(10), true, new StandardImagePageCalculationStrategy());
 
 
-                    for(Task task:tasks){
+                    for (Task task : tasks) {
                         creator.start(task);
                     }
 
