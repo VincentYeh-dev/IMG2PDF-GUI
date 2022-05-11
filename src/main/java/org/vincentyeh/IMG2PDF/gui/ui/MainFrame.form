@@ -153,7 +153,7 @@
                   </grid>
                 </constraints>
                 <properties>
-                  <text value=""/>
+                  <text value="&lt;NAME&gt;.pdf"/>
                 </properties>
               </component>
             </children>

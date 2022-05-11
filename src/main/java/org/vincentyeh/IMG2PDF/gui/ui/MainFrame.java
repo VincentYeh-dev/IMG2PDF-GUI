@@ -1,6 +1,7 @@
 package org.vincentyeh.IMG2PDF.gui.ui;
 
 
+import org.vincentyeh.IMG2PDF.commandline.concrete.converter.PermissionConverter;
 import org.vincentyeh.IMG2PDF.image.helper.concrete.DirectionImageHelper;
 import org.vincentyeh.IMG2PDF.pdf.concrete.appender.ExecutorPageAppender;
 import org.vincentyeh.IMG2PDF.pdf.concrete.calculation.strategy.StandardImagePageCalculationStrategy;
@@ -138,23 +139,23 @@ public class MainFrame {
     private DocumentArgument getDocumentArgument() {
         DocumentArgument argument = new DocumentArgument();
         argument.setInformation(null);
-        String owner, user;
-
-        if (pwd_owner_password.getPassword().length == 0) {
-            owner = new String(pwd_owner_password.getPassword());
-        } else {
+        String owner=String.valueOf(pwd_owner_password.getPassword());
+        String user=String.valueOf(pwd_user_password.getPassword());
+        if (owner.isEmpty()) {
             owner = null;
         }
 
-        if (pwd_user_password.getPassword().length == 0) {
-            user = new String(pwd_user_password.getPassword());
-        } else {
+        if (user.isEmpty()) {
             user = null;
         }
 
         argument.setOwnerPassword(owner);
         argument.setUserPassword(user);
-        argument.setPermission(new Permission());
+        try {
+            argument.setPermission(new PermissionConverter().convert("255"));
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         return argument;
     }
 
