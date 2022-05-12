@@ -7,6 +7,7 @@ import org.vincentyeh.IMG2PDF.pdf.concrete.appender.ExecutorPageAppender;
 import org.vincentyeh.IMG2PDF.pdf.concrete.calculation.strategy.StandardImagePageCalculationStrategy;
 import org.vincentyeh.IMG2PDF.pdf.concrete.converter.ImageHelperPDFCreatorImpl;
 import org.vincentyeh.IMG2PDF.pdf.concrete.converter.PDFBoxCreatorImpl;
+import org.vincentyeh.IMG2PDF.pdf.framework.appender.PageAppender;
 import org.vincentyeh.IMG2PDF.pdf.framework.converter.PDFCreator;
 import org.vincentyeh.IMG2PDF.pdf.function.converter.ImagePDFCreator;
 import org.vincentyeh.IMG2PDF.pdf.parameter.*;
@@ -21,7 +22,6 @@ import org.vincentyeh.IMG2PDF.util.file.exception.MakeDirectoryException;
 
 import javax.swing.*;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.io.File;
 import java.util.Arrays;
 import java.util.LinkedList;
@@ -46,6 +46,7 @@ public class MainFrame {
     private JComboBox<FileSorter.Sortby> combo_sortby;
     private JComboBox<FileSorter.Sequence> combo_sequence;
     private JProgressBar progress;
+    private JCheckBox check_overwrite;
     private JFileChooser sources_chooser;
 
     public MainFrame() {
@@ -62,56 +63,10 @@ public class MainFrame {
                         .map(file -> String.format("\"%s\"", file.getAbsolutePath())).collect(Collectors.joining(" ")));
             }
         });
-        button_convert.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                new Thread(new Runnable() {
-                    @Override
-                    public void run() {
-                        try {
-                            List<Task> tasks = toTasks(files);
-                            progress.setMaximum(tasks.size());
-
-                            ImagePDFCreator creator = new ImagePDFCreator(new PDFBoxCreatorImpl(new File("temp"), 1024 * 1024 * 100),
-                                    new ImageHelperPDFCreatorImpl(new DirectionImageHelper(null)),
-                                    new ExecutorPageAppender(10), true, new StandardImagePageCalculationStrategy());
-                            creator.setCreationListener(new PDFCreator.CreationListener() {
-                                int progress_int;
-
-                                @Override
-                                public void initializing(Task task) {
-                                }
-
-                                @Override
-                                public void onConversionComplete() {
-                                    progress.setValue(++progress_int);
-                                }
-
-                                @Override
-                                public void onSaved(File file) {
-
-                                }
-
-                                @Override
-                                public void onFinally() {
-
-                                }
-                            });
-
-                            for (Task task : tasks) {
-                                creator.start(task);
-                            }
-
-                        } catch (TaskFactoryProcessException | MakeDirectoryException ex) {
-                            ex.printStackTrace();
-                        }
-                    }
-                }).start();
-
-            }
-        });
+        button_convert.addActionListener(this::startConvert);
 
     }
+
 
     private void createUIComponents() {
         sources_chooser = new JFileChooser();
@@ -188,6 +143,57 @@ public class MainFrame {
             e.printStackTrace();
         }
         return argument;
+    }
+
+    private void startConvert(ActionEvent e) {
+        new Thread(() -> {
+
+            try {
+                boolean overwrite = check_overwrite.isSelected();
+                if (overwrite) {
+                    int result = JOptionPane.showConfirmDialog(null, "Overwrite when file has existed.", "Warning", JOptionPane.OK_CANCEL_OPTION, JOptionPane.WARNING_MESSAGE);
+                    if (result != 0)
+                        return;
+                }
+
+                List<Task> tasks = toTasks(files);
+                progress.setMaximum(tasks.size());
+                PageAppender appender = new ExecutorPageAppender(10);
+
+                ImagePDFCreator creator = new ImagePDFCreator(new PDFBoxCreatorImpl(new File("temp"), 1024 * 1024 * 100),
+                        new ImageHelperPDFCreatorImpl(new DirectionImageHelper(null)), appender
+                        , overwrite, new StandardImagePageCalculationStrategy());
+                creator.setCreationListener(new PDFCreator.CreationListener() {
+                    int progress_int;
+
+                    @Override
+                    public void initializing(Task task) {
+                    }
+
+                    @Override
+                    public void onConversionComplete() {
+                        progress.setValue(++progress_int);
+                    }
+
+                    @Override
+                    public void onSaved(File file) {
+
+                    }
+
+                    @Override
+                    public void onFinally() {
+
+                    }
+                });
+
+                for (Task task : tasks) {
+                    creator.start(task);
+                }
+
+            } catch (TaskFactoryProcessException | MakeDirectoryException ex) {
+                ex.printStackTrace();
+            }
+        }).start();
     }
 
     public JPanel getRootPanel() {
