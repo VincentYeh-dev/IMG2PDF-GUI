@@ -7,7 +7,6 @@ import org.vincentyeh.IMG2PDF.pdf.concrete.appender.ExecutorPageAppender;
 import org.vincentyeh.IMG2PDF.pdf.concrete.calculation.strategy.StandardImagePageCalculationStrategy;
 import org.vincentyeh.IMG2PDF.pdf.concrete.converter.ImageHelperPDFCreatorImpl;
 import org.vincentyeh.IMG2PDF.pdf.concrete.converter.PDFBoxCreatorImpl;
-import org.vincentyeh.IMG2PDF.pdf.concrete.listener.ProgressBarCreationListener;
 import org.vincentyeh.IMG2PDF.pdf.framework.converter.PDFCreator;
 import org.vincentyeh.IMG2PDF.pdf.function.converter.ImagePDFCreator;
 import org.vincentyeh.IMG2PDF.pdf.parameter.*;
@@ -47,6 +46,7 @@ public class MainFrame {
     private JComboBox<FileSorter.Sortby> combo_sortby;
     private JComboBox<FileSorter.Sequence> combo_sequence;
     private JProgressBar progress;
+    private JFileChooser sources_chooser;
 
     public MainFrame() {
         createUIComponents();
@@ -54,15 +54,10 @@ public class MainFrame {
     }
 
     private void initializeListener() {
-
         button_browse.addActionListener(e -> {
-            JFileChooser chooser = new JFileChooser();
-            chooser.setMultiSelectionEnabled(true);
-
-            chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
-            int option = chooser.showOpenDialog(null);
+            int option = sources_chooser.showOpenDialog(null);
             if (option == JFileChooser.APPROVE_OPTION) {
-                files = chooser.getSelectedFiles();
+                files = sources_chooser.getSelectedFiles();
                 field_sources.setText(Arrays.stream(files)
                         .map(file -> String.format("\"%s\"", file.getAbsolutePath())).collect(Collectors.joining(" ")));
             }
@@ -119,6 +114,11 @@ public class MainFrame {
     }
 
     private void createUIComponents() {
+        sources_chooser = new JFileChooser();
+        sources_chooser.setMultiSelectionEnabled(true);
+        sources_chooser.setFileSelectionMode(JFileChooser.DIRECTORIES_ONLY);
+        sources_chooser.setCurrentDirectory(new File("").getAbsoluteFile());
+
         combo_sortby.setModel(new DefaultComboBoxModel<>(FileSorter.Sortby.values()));
         combo_sequence.setModel(new DefaultComboBoxModel<>(FileSorter.Sequence.values()));
 
