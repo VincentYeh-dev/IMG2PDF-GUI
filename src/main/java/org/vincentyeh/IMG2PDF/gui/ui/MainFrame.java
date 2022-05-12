@@ -2,7 +2,9 @@ package org.vincentyeh.IMG2PDF.gui.ui;
 
 
 import org.vincentyeh.IMG2PDF.commandline.concrete.converter.PermissionConverter;
+import org.vincentyeh.IMG2PDF.image.helper.concrete.ColorSpaceImageHelper;
 import org.vincentyeh.IMG2PDF.image.helper.concrete.DirectionImageHelper;
+import org.vincentyeh.IMG2PDF.image.helper.framework.ImageHelper;
 import org.vincentyeh.IMG2PDF.pdf.concrete.appender.ExecutorPageAppender;
 import org.vincentyeh.IMG2PDF.pdf.concrete.calculation.strategy.StandardImagePageCalculationStrategy;
 import org.vincentyeh.IMG2PDF.pdf.concrete.converter.ImageHelperPDFCreatorImpl;
@@ -21,6 +23,7 @@ import org.vincentyeh.IMG2PDF.util.file.GlobbingFileFilter;
 import org.vincentyeh.IMG2PDF.util.file.exception.MakeDirectoryException;
 
 import javax.swing.*;
+import java.awt.color.ColorSpace;
 import java.awt.event.ActionEvent;
 import java.io.File;
 import java.util.Arrays;
@@ -47,6 +50,7 @@ public class MainFrame {
     private JComboBox<FileSorter.Sequence> combo_sequence;
     private JProgressBar progress;
     private JCheckBox check_overwrite;
+    private JComboBox<Color> combo_color;
     private JFileChooser sources_chooser;
 
     public MainFrame() {
@@ -81,6 +85,7 @@ public class MainFrame {
         combo_vertical.setModel(new DefaultComboBoxModel<>(PageAlign.VerticalAlign.values()));
         combo_horizontal.setModel(new DefaultComboBoxModel<>(PageAlign.HorizontalAlign.values()));
         combo_size.setModel(new DefaultComboBoxModel<>(PageSize.values()));
+        combo_color.setModel(new DefaultComboBoxModel<>(Color.values()));
 //
 //        for (PageAlign.VerticalAlign align : PageAlign.VerticalAlign.values()) {
 //            combo_vertical.addItem(align);
@@ -160,8 +165,9 @@ public class MainFrame {
                 progress.setMaximum(tasks.size());
                 PageAppender appender = new ExecutorPageAppender(10);
 
+                ImageHelper helper = new DirectionImageHelper(new ColorSpaceImageHelper(ColorSpace.getInstance(combo_color.getItemAt(combo_color.getSelectedIndex()).cs)));
                 ImagePDFCreator creator = new ImagePDFCreator(new PDFBoxCreatorImpl(new File("temp"), 1024 * 1024 * 100),
-                        new ImageHelperPDFCreatorImpl(new DirectionImageHelper(null)), appender
+                        new ImageHelperPDFCreatorImpl(helper), appender
                         , overwrite, new StandardImagePageCalculationStrategy());
                 creator.setCreationListener(new PDFCreator.CreationListener() {
                     int progress_int;
@@ -200,4 +206,13 @@ public class MainFrame {
         return root;
     }
 
+    private enum Color {
+        COLOR(ColorSpace.CS_sRGB), GRAY(ColorSpace.CS_GRAY);
+
+        private final int cs;
+
+        Color(int cs) {
+            this.cs = cs;
+        }
+    }
 }

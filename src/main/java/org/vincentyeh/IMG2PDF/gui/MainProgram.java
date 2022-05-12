@@ -4,7 +4,6 @@ import com.formdev.flatlaf.FlatDarkLaf;
 import org.vincentyeh.IMG2PDF.gui.ui.MainFrame;
 
 import javax.swing.*;
-import java.awt.*;
 
 public class MainProgram {
     public static void main(String[] args) {
