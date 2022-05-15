@@ -162,6 +162,7 @@ public class MainFrame {
                 }
 
                 List<Task> tasks = toTasks(files);
+                progress.setValue(0);
                 progress.setMaximum(tasks.size());
                 PageAppender appender = new ExecutorPageAppender(10);
 
@@ -174,6 +175,7 @@ public class MainFrame {
 
                     @Override
                     public void initializing(Task task) {
+                        System.out.println(task.getPdfDestination());
                     }
 
                     @Override
